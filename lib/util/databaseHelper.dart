@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:gpa/model/subject.dart';
+import 'package:gpa/data/models/subject_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper{
   static final DatabaseHelper _instance =new DatabaseHelper.internal();
-  
+
   factory DatabaseHelper()=>_instance;
 
   final String tableSubject="subjectTable";

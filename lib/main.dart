@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gpa/model/subject.dart';
+import 'package:gpa/data/models/subject_model.dart';
 import 'package:gpa/ui/Page.dart';
+import 'package:gpa/ui/courses.dart';
 import 'package:gpa/util/databaseHelper.dart';
 
 List subjects;
@@ -53,6 +54,6 @@ void main() async {
   // print(s.grade.toString());
   runApp(new MaterialApp(
     title: 'gpa',
-    home: new Page(),
+    home: new Courses(),
   ));
 }

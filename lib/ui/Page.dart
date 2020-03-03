@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:gpa/ui/subjects_screen.dart';
 import 'package:gpa/util/databaseHelper.dart';
 
-class Page extends StatelessWidget{
+class Page extends StatefulWidget{
+  static final String id='page';
+  @override
+  _PageState createState() => _PageState();
+}
+
+class _PageState extends State<Page> {
   var db = new DatabaseHelper();
+
   int x=0;
+
   @override
   Widget build(BuildContext context) {
     return new DefaultTabController(
@@ -35,6 +43,4 @@ class Page extends StatelessWidget{
       ),
     );
   }
-  
-
 }

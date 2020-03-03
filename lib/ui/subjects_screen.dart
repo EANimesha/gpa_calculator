@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gpa/model/subject.dart';
+import 'package:gpa/data/models/subject_model.dart';
 import 'package:gpa/util/databaseHelper.dart';
 
 class Subjects extends StatefulWidget {
