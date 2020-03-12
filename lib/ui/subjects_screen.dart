@@ -56,14 +56,14 @@ class SubjectScreenState extends State<Subjects> {
                 reverse: false,
                 itemCount: _subjectList.length,
                 itemBuilder: (_, int index) {
-                  String key = _subjectList[index].code;
+                  int key = _subjectList[index].id;
                   return new Card(
                     color: Colors.grey,
                     child: new ListTile(
                       title: new Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          new Text(key),
+                          new Text(_subjectList[index].code),
                           new Text(
                             '${_subjectList[index].desc}',
                             style: new TextStyle(fontSize: 12.0),
@@ -71,7 +71,7 @@ class SubjectScreenState extends State<Subjects> {
                         ],
                       ),
                       trailing: new Listener(
-                          key: new Key(key),
+                          key: new Key(key.toString()),
                           child: new DropdownButton<String>(
                             items: grades
                                 .map((value, description) {
@@ -111,10 +111,6 @@ class SubjectScreenState extends State<Subjects> {
               child: new Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  new RaisedButton(
-                    onPressed: resetAll,
-                    child: new Text('Reset'),
-                  ),
                   new Text(
                     'GPA :${_gpa.toStringAsFixed(3)}',
                     style: new TextStyle(
@@ -129,15 +125,17 @@ class SubjectScreenState extends State<Subjects> {
   }
 
   void getdata(DatabaseHelper db, int y) async {
-    List _subjects = await db.getAllSubjects(y);
+    List _subjects = await db.getAllSubjects();
     for (var i = 0; i < _subjects.length; i++) {
       Subject subject = Subject.map(_subjects[i]);
-      setState(() {
+      if(subject.year==y){
+        setState(() {
         _subjectList.add(subject);
       });
+      }
+    }
       _value = new List<String>(_subjectList.length);
     }
-  }
 
   String getGrades(int index) {
     var v = _subjectList[index].grade;
@@ -148,9 +146,9 @@ class SubjectScreenState extends State<Subjects> {
     }
   }
 
-  void setValue(String value, String code, int index) async {
+  void setValue(String value, int id, int index) async {
     var g = double.parse(value);
-    Subject subjects = await db.getSubject("'$code'");
+    Subject subjects = await db.getSubject(id);
     subjects.grade = g;
     await db.updateSubject(subjects);
     gettotalGpa();
@@ -158,40 +156,31 @@ class SubjectScreenState extends State<Subjects> {
   void gettotalGpa() async {
     double gptot = 0;
     double creditCount = 0;
-    List _subjects1 = await db.getAllSubjects(1);
-    List _subjects2 = await db.getAllSubjects(2);
-    for (var i = 0; i < _subjects1.length; i++) {
-      Subject subject = Subject.map(_subjects1[i]);
+    List _subjects = await db.getAllSubjects();
+    for (var i = 0; i < _subjects.length; i++) {
+      Subject subject = Subject.map(_subjects[i]);
       if (subject.grade != 0.0) {
         gptot = gptot + subject.credit * subject.grade;
         creditCount = creditCount + subject.credit;
       }
     }
-    for (var i = 0; i < _subjects2.length; i++) {
-      Subject subject = Subject.map(_subjects2[i]);
-      if (subject.grade != 0.0) {
-        gptot = gptot + subject.credit * subject.grade;
-        creditCount = creditCount + subject.credit;
-      }
-    }
-
     setState(() {
       _gpa = gptot / creditCount;
     });
   }
 
   void resetAll() async{
-    List _subjects1 = await db.getAllSubjects(1);
-    List _subjects2 = await db.getAllSubjects(2);
-    for (var i = 0; i < _subjects1.length; i++) {
-      Subject subject = Subject.map(_subjects1[i]);
-      subject.grade = 0.0;
-      await db.updateSubject(subject);
-    }
-    for (var i = 0; i < _subjects2.length; i++) {
-      Subject subject = Subject.map(_subjects2[i]);
-      subject.grade = 0.0;
-      await db.updateSubject(subject);
-    }
-  }
+    // List _subjects1 = await db.getAllSubjects(1);
+    // List _subjects2 = await db.getAllSubjects(2);
+    // for (var i = 0; i < _subjects1.length; i++) {
+    //   Subject subject = Subject.map(_subjects1[i]);
+    //   subject.grade = 0.0;
+    //   await db.updateSubject(subject);
+    // }
+    // for (var i = 0; i < _subjects2.length; i++) {
+    //   Subject subject = Subject.map(_subjects2[i]);
+    //   subject.grade = 0.0;
+    //   await db.updateSubject(subject);
+    // }
+}
 }

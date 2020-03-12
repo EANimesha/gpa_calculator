@@ -33,7 +33,7 @@ class DatabaseHelper{
 
   initDb() async {
     Directory documentDirectory=await getApplicationDocumentsDirectory();
-    String path=join(documentDirectory.path,"gpalasss.db");
+    String path=join(documentDirectory.path,"gpa.db");
 
     var ourDb=await openDatabase(path,version: 1,onCreate: _onCreate);
     return ourDb;
@@ -54,9 +54,9 @@ class DatabaseHelper{
 
   //get Users
 
-  Future<List> getAllSubjects(int y)async{
+  Future<List> getAllSubjects()async{
     var dbClient=await db;
-    var result=await dbClient.rawQuery("SELECT * FROM $tableSubject WHERE $columnYear=$y");
+    var result=await dbClient.rawQuery("SELECT * FROM $tableSubject ORDER BY $columnCode ASC");
     return result.toList();
   }
   Future<int> getCount() async{
@@ -66,21 +66,31 @@ class DatabaseHelper{
     );
   }
 
-  Future<Subject> getSubject(String scode) async{
+  Future<Subject> getSubject(int id) async{
     var dbClient=await db;
-    var result=await dbClient.rawQuery("SELECT * FROM $tableSubject WHERE $columnCode=$scode");
+    var result=await dbClient.rawQuery("SELECT * FROM $tableSubject WHERE $columnId=$id");
     if(result.length==0){
       return null;
     }
     return new Subject.fromMap(result.first);
   }
 
-  // //delete
-  // Future<int> deleteUser(int id ) async{
-  //   var dbClient=await db;
-  //   return await dbClient.delete(tableSubject,where:"$columnId=?",whereArgs: [id]);
 
+  // Future<Subject> getSubject(String scode) async{
+  //   var dbClient=await db;
+  //   var result=await dbClient.rawQuery("SELECT * FROM $tableSubject WHERE $columnCode=$scode");
+  //   if(result.length==0){
+  //     return null;
+  //   }
+  //   return new Subject.fromMap(result.first);
   // }
+
+  //delete
+  Future<int> deleteSubject(int id ) async{
+    var dbClient=await db;
+    return await dbClient.delete(tableSubject,where:"$columnId=?",whereArgs: [id]);
+
+  }
 
   //update
   Future<int> updateSubject(Subject subject) async{
