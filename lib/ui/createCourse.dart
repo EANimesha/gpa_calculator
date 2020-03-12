@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gpa/data/models/subject_model.dart';
+import 'package:gpa/util/databaseHelper.dart';
 
 class CreateCourse extends StatefulWidget {
   CreateCourse({Key key}) : super(key: key);
@@ -11,6 +13,31 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _codeEdittingController =new TextEditingController();
   final TextEditingController _nameEdittingController =new TextEditingController();
 
+  var db = new DatabaseHelper();
+  final List<Subject> _itemList = <Subject>[];
+
+   @override
+  void initState() {
+    super.initState();
+    _readSubjectsList();
+  }
+
+   void _handleSubmitted(String code,String name) async {
+    _codeEdittingController.clear();
+    _nameEdittingController.clear();
+
+    Subject subject =
+        new Subject(code,name,int.parse(code[8]),0.0,int.parse(code[4]));
+    int savedSubjectId = await db.saveSubject(subject);
+
+    Subject adddedItem = await db.getSubject(savedSubjectId);
+
+    setState(() {
+      _itemList.insert(0, adddedItem);
+    });
+    // print(savedItemId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,20 +49,22 @@ class _CreateCourseState extends State<CreateCourse> {
          child: new ListView.builder(
               padding: new EdgeInsets.all(8.0),
               reverse: false,
-              itemCount: 1,
+              itemCount:_itemList.length,
               itemBuilder: (_, int index) {
                 return Card(
                   color: Colors.black26,
                   borderOnForeground: true,
                   child: new ListTile(
-                    title: Text('SENG11213'),
-                    subtitle: Text('Programming Concepts'),
+                    title:Text( _itemList[index].code),
+                    subtitle: Text(_itemList[index].desc),
                     trailing: new Listener(
-                      // key: new Key(_itemList[index].itemName),
+                      key: new Key(_itemList[index].code),
                       child: new Icon(
                         Icons.remove_circle,
                         color: Colors.redAccent.shade100,
-                      )
+                      ),
+                      onPointerDown: (pointeEvent) =>
+                          _deleteSubject(_itemList[index].id, index),
                     ),
                   ),
                 );
@@ -86,6 +115,7 @@ class _CreateCourseState extends State<CreateCourse> {
       actions: <Widget>[
         new FlatButton(
           onPressed: () {
+            _handleSubmitted(_codeEdittingController.text,_nameEdittingController.text);
             _codeEdittingController.clear();
             _nameEdittingController.clear();
             Navigator.pop(context);
@@ -104,4 +134,23 @@ class _CreateCourseState extends State<CreateCourse> {
           return alert;
         });
   }
+
+  _readSubjectsList() async {
+    List items = await db.getAllSubjects();
+    items.forEach((item) {
+      // NoToDoItem noToDoItem=NoToDoItem.map(item);
+      setState(() {
+        _itemList.add(Subject.map(item));
+      });
+      // print(noToDoItem.itemName);
+    });
+  }
+
+  _deleteSubject(int id, int index) async {
+    await db.deleteSubject(id);
+    setState(() {
+      _itemList.removeAt(index);
+    });
+  }
+
 }
