@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gpa/ui/createCourse.dart';
+import 'package:gpa/ui/menuWidget.dart';
 import 'package:gpa/ui/subjects_screen.dart';
 
 class Page extends StatefulWidget{
@@ -17,7 +18,7 @@ class _PageState extends State<Page> {
     return new DefaultTabController(
       length: 4,
       child: Scaffold(
-        drawer:menus(context) ,
+        drawer:MyMenu().build(context) ,
         appBar: AppBar(
             bottom: TabBar(
               tabs: [
@@ -41,36 +42,6 @@ class _PageState extends State<Page> {
         ),
         
       ),
-    );
-  }
-
-  Widget menus(BuildContext context) {
-    return Drawer(
-      child:ListView(
-        padding:EdgeInsets.zero,
-        children:<Widget>[
-          DrawerHeader(
-            child: Text(
-              'GPA Calculate App'
-            ),
-            decoration: BoxDecoration(
-              color:Colors.redAccent
-            ),
-          ),
-          ListTile(
-            title:Text('Edit Contents'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreateCourse()),
-              );
-            },
-          ),
-          ListTile(
-            title:Text('Reset All'),
-          )
-        ]
-      )
     );
   }
 }
