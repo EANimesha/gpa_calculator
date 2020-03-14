@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gpa/data/dataSources/local_data_source.dart';
 import 'package:gpa/data/models/subject_model.dart';
-import 'package:gpa/util/databaseHelper.dart';
 
 class CreateCourse extends StatefulWidget {
   CreateCourse({Key key}) : super(key: key);
@@ -13,7 +13,7 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _codeEdittingController =new TextEditingController();
   final TextEditingController _nameEdittingController =new TextEditingController();
 
-  var db = new DatabaseHelper();
+  var db = new LocalDataSource();
   final List<Subject> _itemList = <Subject>[];
 
    @override

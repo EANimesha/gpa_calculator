@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gpa/ui/createCourse.dart';
 import 'package:gpa/ui/subjects_screen.dart';
-import 'package:gpa/util/databaseHelper.dart';
 
 class Page extends StatefulWidget{
   static final String id='page';
@@ -10,7 +9,6 @@ class Page extends StatefulWidget{
 }
 
 class _PageState extends State<Page> {
-  var db = new DatabaseHelper();
 
   int x=0;
 
