@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-class Subject extends StatelessWidget{
+class Subject{
   String _code;
   String _desc;
   double _grade;
@@ -51,20 +51,20 @@ class Subject extends StatelessWidget{
     this._id=map["id"];
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-      margin: const EdgeInsets.all(8.0),
-      child: new Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(_code),
-          new Container(
-            child: Text(_desc),
-          )
-        ],
-      ),
-    );
-  }
+  // @override
+  // Widget build(BuildContext context) {
+  //   return new Container(
+  //     margin: const EdgeInsets.all(8.0),
+  //     child: new Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: <Widget>[
+  //         Text(_code),
+  //         new Container(
+  //           child: Text(_desc),
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
 }
