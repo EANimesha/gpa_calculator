@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gpa/data/dataSources/local_data_source.dart';
 import 'package:gpa/data/models/subject_model.dart';
+import 'package:gpa/presentation/bloc/subjects_bloc.dart';
 
 class CreateCourse extends StatefulWidget {
   CreateCourse({Key key}) : super(key: key);
@@ -13,14 +13,16 @@ class _CreateCourseState extends State<CreateCourse> {
   final TextEditingController _codeEdittingController =new TextEditingController();
   final TextEditingController _nameEdittingController =new TextEditingController();
 
-  var db = new LocalDataSource();
-  final List<Subject> _itemList = <Subject>[];
+
+ final SubjectsBloc bloc=SubjectsBloc();
 
    @override
   void initState() {
     super.initState();
-    _readSubjectsList();
+    bloc.getSubjects();
   }
+
+ 
 
    void _handleSubmitted(String code,String name) async {
     _codeEdittingController.clear();
@@ -28,14 +30,7 @@ class _CreateCourseState extends State<CreateCourse> {
 
     Subject subject =
         new Subject(code,name,int.parse(code[8]),0.0,int.parse(code[4]));
-    int savedSubjectId = await db.saveSubject(subject);
-
-    Subject adddedItem = await db.getSubject(savedSubjectId);
-
-    setState(() {
-      _itemList.insert(0, adddedItem);
-    });
-    // print(savedItemId);
+        bloc.addSubject(subject);
   }
 
   @override
@@ -46,30 +41,44 @@ class _CreateCourseState extends State<CreateCourse> {
       ),
        body: Container(
          margin: EdgeInsets.only(top:10.0),
-         child: new ListView.builder(
-              padding: new EdgeInsets.all(8.0),
-              reverse: false,
-              itemCount:_itemList.length,
+        child: StreamBuilder(
+          stream: bloc.subjetsStream,
+          builder:(BuildContext context,AsyncSnapshot<List> snapshot) {
+            if(snapshot.hasData){
+              return snapshot.data.length!=0
+                ?ListView.builder(
+              itemCount:snapshot.data.length,
               itemBuilder: (_, int index) {
+                Subject subject=snapshot.data[index];
                 return Card(
                   color: Colors.black26,
                   borderOnForeground: true,
                   child: new ListTile(
-                    title:Text( _itemList[index].code),
-                    subtitle: Text(_itemList[index].desc),
+                    title:Text( subject.code.toString()),
+                    subtitle: Text(subject.desc.toString()),
                     trailing: new Listener(
-                      key: new Key(_itemList[index].code),
+                      key: new Key(subject.code.toString()),
                       child: new Icon(
                         Icons.remove_circle,
                         color: Colors.redAccent.shade100,
                       ),
                       onPointerDown: (pointeEvent) =>
-                          _deleteSubject(_itemList[index].id, index),
+                          _deleteSubject(subject.id, index),
                     ),
                   ),
                 );
-              },
-            ),
+              })
+              :Container(
+                child:Text('Start adding subjects')
+              );
+            }else{
+              bloc.getSubjects();
+              return Container(
+                child:Center(child: CircularProgressIndicator(),)
+              );
+            }
+          }
+          ),
          ),
          floatingActionButton: new FloatingActionButton(
           tooltip: "Add Item",
@@ -135,22 +144,14 @@ class _CreateCourseState extends State<CreateCourse> {
         });
   }
 
-  _readSubjectsList() async {
-    List items = await db.getAllSubjects();
-    items.forEach((item) {
-      // NoToDoItem noToDoItem=NoToDoItem.map(item);
-      setState(() {
-        _itemList.add(Subject.map(item));
-      });
-      // print(noToDoItem.itemName);
-    });
+
+  _deleteSubject(int id, int index){
+    bloc.deleteSuject(id);
   }
 
-  _deleteSubject(int id, int index) async {
-    await db.deleteSubject(id);
-    setState(() {
-      _itemList.removeAt(index);
-    });
+  @override
+  void dispose() {
+    super.dispose();
   }
 
 }
