@@ -53,11 +53,21 @@ class LocalDataSource extends DataSource {
   }
 
   @override
-  Future<List> getAllSubjects() async {
+  Future<List> getAllSubjects({int year}) async {
     var dbClient = await db;
-    var result = await dbClient
+
+    List<Map<String, dynamic>> result;
+    if (year != null) {
+        result = await dbClient
+        .rawQuery("SELECT * FROM $tableSubject WHERE $columnYear=$year ORDER BY $columnCode ASC");
+    } else {
+      result = await dbClient
         .rawQuery("SELECT * FROM $tableSubject ORDER BY $columnCode ASC");
-    return result.toList();
+    }
+    
+    List subjects=result.isNotEmpty?result.map((subject)=>Subject.fromMap(subject)).toList()
+                  :[];
+    return subjects;
   }
 
   @override
@@ -78,7 +88,7 @@ class LocalDataSource extends DataSource {
   }
 
   @override
-  Future<int> updateSubject(Subject subject) async{
+  Future<int> updateSubject(Subject subject,{int year}) async{
     var dbClient=await db;
     return await dbClient.update(tableSubject,subject.toMap(),where:"$columnCode=?",whereArgs: [subject.code]);
   }
@@ -86,5 +96,16 @@ class LocalDataSource extends DataSource {
   Future close() async{
     var dbClient=await db;
     return dbClient.close();
+  }
+
+  @override
+  Future<List> getsubjectsByYear(int year) async{
+   var dbClient = await db;
+    var result = await dbClient
+        .rawQuery("SELECT * FROM $tableSubject WHERE $columnYear=$year ORDER BY $columnCode ASC");
+    
+    List subjects=result.isNotEmpty?result.map((subject)=>Subject.fromMap(subject)).toList()
+                  :[];
+    return subjects;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gpa/data/dataSources/local_data_source.dart';
 import 'package:gpa/data/models/subject_model.dart';
-import 'package:gpa/util/databaseHelper.dart';
+import 'package:gpa/presentation/bloc/subjects_bloc.dart';
 
 class Subjects extends StatefulWidget {
   int _year = 0;
@@ -13,23 +14,25 @@ class Subjects extends StatefulWidget {
 }
 
 class SubjectScreenState extends State<Subjects> {
+  final SubjectsBloc bloc = SubjectsBloc();
+
   int i;
   int l;
   SubjectScreenState(this.i);
-  var db = new DatabaseHelper();
-  List<Subject> _subjectList = <Subject>[];
+
+  var db = new LocalDataSource();
+  // List<Subject> _subjectList = <Subject>[];
+
   double _gpa = 0.0;
-  List<String> _value ;
-  
+  List<String> _value;
+
   @override
   void initState() {
     super.initState();
-    getdata(db, i);
+    // getdata(db, i);
+    bloc.getSubjects(year: i);
     gettotalGpa();
-    
   }
-
-  
 
   static const Map<String, String> grades = {
     '4.0': 'A+/A',
@@ -40,8 +43,7 @@ class SubjectScreenState extends State<Subjects> {
     '2.3': 'C+',
     '2.0': 'C',
     '1.7': 'C-',
-    '0.0':'None',
-    
+    '0.0': 'None',
   };
 
   @override
@@ -51,53 +53,57 @@ class SubjectScreenState extends State<Subjects> {
         body: new Column(
           children: <Widget>[
             new Flexible(
-              child: new ListView.builder(
-                padding: new EdgeInsets.all(8.0),
-                reverse: false,
-                itemCount: _subjectList.length,
-                itemBuilder: (_, int index) {
-                  int key = _subjectList[index].id;
-                  return new Card(
-                    color: Colors.grey,
-                    child: new ListTile(
-                      title: new Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          new Text(_subjectList[index].code),
-                          new Text(
-                            '${_subjectList[index].desc}',
-                            style: new TextStyle(fontSize: 12.0),
-                          )
-                        ],
-                      ),
-                      trailing: new Listener(
-                          key: new Key(key.toString()),
-                          child: new DropdownButton<String>(
-                            items: grades
-                                .map((value, description) {
-                                  return MapEntry(
-                                      description,
-                                      DropdownMenuItem<String>(
-                                        child: Text(description),
-                                        value: value,
-                                      ));
-                                })
-                                .values
-                                .toList(),
-                            onChanged: (String value) {
-                              _value[index] = value;
-                              setValue(value, key, index);
-                              _subjectList[index].grade = double.parse(value);
-                              setState(() {});
-                            },
-                            hint: new Text('${getGrades(index)}'),
-                            value: _value[index],
-                          )
-                          ),
-                    ),
-                  );
-                },
-              ),
+              child: StreamBuilder(
+                  stream: bloc.subjetsStream,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<List> snapshot) {
+                    if (snapshot.hasData) {
+                      return snapshot.data.length != 0
+                          ? ListView.builder(
+                              itemCount: snapshot.data.length,
+                              itemBuilder: (_, int index) {
+                                Subject subject = snapshot.data[index];
+                                return Card(
+                                  color: Colors.grey,
+                                  borderOnForeground: true,
+                                  child: new ListTile(
+                                    title: Text(subject.code.toString()),
+                                    subtitle: Text(subject.desc.toString()),
+                                    
+                                     trailing: new Listener(
+                                          key: new Key(subject.id.toString()),
+                                          child: new DropdownButton<String>(
+                                            items: grades
+                                                .map((value, description) {
+                                                  return MapEntry(
+                                                      description,
+                                                      DropdownMenuItem<String>(
+                                                        child: Text(description),
+                                                        value: value,
+                                                      ));
+                                                })
+                                                .values
+                                                .toList(),
+                                            onChanged: (String value) {
+                                              subject.grade=double.parse(value);
+                                              bloc.updateSubject(subject,year: i);
+                                              gettotalGpa();
+                                            },
+                                            value: subject.grade.toString(),
+                                          )
+                                          ),
+                                  ),
+                                );
+                              })
+                          : Container(child: Text('Start adding subjects'));
+                    } else {
+                      bloc.getSubjects(year: i);
+                      return Container(
+                          child: Center(
+                        child: CircularProgressIndicator(),
+                      ));
+                    }
+                  }),
             ),
             new Divider(
               height: 1.0,
@@ -124,41 +130,12 @@ class SubjectScreenState extends State<Subjects> {
         ));
   }
 
-  void getdata(DatabaseHelper db, int y) async {
-    List _subjects = await db.getAllSubjects();
-    for (var i = 0; i < _subjects.length; i++) {
-      Subject subject = Subject.map(_subjects[i]);
-      if(subject.year==y){
-        setState(() {
-        _subjectList.add(subject);
-      });
-      }
-    }
-      _value = new List<String>(_subjectList.length);
-    }
-
-  String getGrades(int index) {
-    var v = _subjectList[index].grade;
-    if (v == 0.0) {
-      return "Select";
-    } else {
-      return grades[v.toString()];
-    }
-  }
-
-  void setValue(String value, int id, int index) async {
-    var g = double.parse(value);
-    Subject subjects = await db.getSubject(id);
-    subjects.grade = g;
-    await db.updateSubject(subjects);
-    gettotalGpa();
-  }
   void gettotalGpa() async {
     double gptot = 0;
     double creditCount = 0;
-    List _subjects = await db.getAllSubjects();
+    List<Subject> _subjects = await db.getAllSubjects();
     for (var i = 0; i < _subjects.length; i++) {
-      Subject subject = Subject.map(_subjects[i]);
+      Subject subject = _subjects[i];
       if (subject.grade != 0.0) {
         gptot = gptot + subject.credit * subject.grade;
         creditCount = creditCount + subject.credit;
@@ -169,18 +146,18 @@ class SubjectScreenState extends State<Subjects> {
     });
   }
 
-  void resetAll() async{
-    // List _subjects1 = await db.getAllSubjects(1);
-    // List _subjects2 = await db.getAllSubjects(2);
-    // for (var i = 0; i < _subjects1.length; i++) {
-    //   Subject subject = Subject.map(_subjects1[i]);
-    //   subject.grade = 0.0;
-    //   await db.updateSubject(subject);
-    // }
-    // for (var i = 0; i < _subjects2.length; i++) {
-    //   Subject subject = Subject.map(_subjects2[i]);
-    //   subject.grade = 0.0;
-    //   await db.updateSubject(subject);
-    // }
-}
+//   void resetAll() async{
+//     // List _subjects1 = await db.getAllSubjects(1);
+//     // List _subjects2 = await db.getAllSubjects(2);
+//     // for (var i = 0; i < _subjects1.length; i++) {
+//     //   Subject subject = Subject.map(_subjects1[i]);
+//     //   subject.grade = 0.0;
+//     //   await db.updateSubject(subject);
+//     // }
+//     // for (var i = 0; i < _subjects2.length; i++) {
+//     //   Subject subject = Subject.map(_subjects2[i]);
+//     //   subject.grade = 0.0;
+//     //   await db.updateSubject(subject);
+//     // }
+// }
 }

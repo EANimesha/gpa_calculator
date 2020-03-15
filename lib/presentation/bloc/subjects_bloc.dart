@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:gpa/data/dataSources/local_data_source.dart';
 import 'package:gpa/data/models/subject_model.dart';
@@ -9,10 +10,19 @@ class SubjectsBloc implements Bloc{
   final _repository=LocalDataSource();
   Stream<List> get subjetsStream=>_controller.stream;
 
-  getSubjects() async{
-    final result=await _repository.getAllSubjects();
+
+  // setGpa(List<Subject> subjects){
+  //   for (var i = 0; i < subjects.length; i++) {
+  //     gpa=gpa+subjects[i].grade;
+  //   }
+  //   _gpaController.sink.add(gpa);
+  // }
+
+  getSubjects({int year}) async{
+    final result=await _repository.getAllSubjects(year: year);
     _controller.sink.add(result);
   }
+
 
   getSubject(int id)async{
     await _repository.getSubject(id);
@@ -24,9 +34,9 @@ class SubjectsBloc implements Bloc{
     getSubjects();
   }
 
-  updateSubject(Subject subject)async{
+  updateSubject(Subject subject,{int year})async{
     await _repository.updateSubject(subject);
-    getSubjects();
+    getSubjects(year: year);
   }
 
   deleteSuject(int id)async{
